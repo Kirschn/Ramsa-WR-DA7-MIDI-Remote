@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+		<style type="text/css">
+			body {
+				margin: 0;
+				padding: 0;
+			}
+			input[type=range][orient=vertical]
+			{
+			    writing-mode: bt-lr; /* IE */
+			    -webkit-appearance: slider-vertical; /* WebKit */
+			    width: 8px;
+			    height: 175px;
+			    padding: 0 5px;
+			}
+			.faderWrapper {
+				position: absolute;
+				height: 100%;
+				width: 50px;
+
+			}
+			.faderObjectWrapper {
+				bottom: 64px;
+				position: absolute;
+
+			}
+		</style>
+		<script src="http://192.168.178.53/socket.io/socket.io.js"></script>
+		<script>
+		  var socket = io('http://192.168.178.53');
+		  socket.on('action', function (data) {
+		    if (data.type == "generateFaders") {
+		    	for (var i = 0; i < data.amount; i++) {
+		    		generateFader(i, 0, 127);
+		    	}
+		    }
+		  });
+		  socket.on("faderChange", function (data) {
+		  	console.log(data);
+		  	document.getElementById("fader-midi-" + data.fader).value = data.value;
+		  })
+		  function generateFader(midiAdress, min, max) {
+		  	var string = "<div class='faderWrapper' style='left: "+ (midiAdress * 50 + 30)  +"px'>";
+		  	string += "<div class='faderObjectWrapper'>"
+		  	string += "<input class='vertikal' id='fader-midi-" + midiAdress + "' type='range' min='" + min + "' max='" + max + "' step='1' orient='vertical' oninput='mixerUpdateFaderValue(" + midiAdress + ")'>"
+		  	string += "</div>"
+		  	string += "</div>"
+		  	document.getElementById("mixer").innerHTML += string;
+		  	
+		  }
+		  function mixerUpdateFaderValue(fader) {
+		  	socket.emit("faderChange", {
+		  		"fader": fader,
+		  		"value": document.getElementById("fader-midi-" + fader).value
+		  	});
+		  }
+		</script>
+	</head>
+	<body>
+		<div id="mixer">
+		</div>
+
+	</body>
+</html>
